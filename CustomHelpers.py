@@ -3,6 +3,20 @@ from sklearn.feature_selection import chi2, f_classif
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
+def drop_constant_columns(df):
+    '''Finds and removes any constant columns from the dataframe.
+    Action is performed in place.'''
+    drop_cols = list()
+    for col in df.columns:
+        if df[col].value_counts().size == 1:
+            print(f"All entries in `{col}` column are `{df[col][0]}`.")
+            drop_cols.append(col)
+    if not drop_cols:
+        print("No constant columns found.")
+    else:
+        print("Dropping columns...")
+        df.drop(columns=drop_cols, inplace=True)
+
 def get_complement(sup:pd.DataFrame, sub:pd.DataFrame) -> pd.DataFrame:
     """
     Gets the rows in `sup` which aren't in `sub`.
