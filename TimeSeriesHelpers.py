@@ -1,6 +1,7 @@
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
+import pandas as pd
 from math import sqrt
 from sklearn.metrics import mean_squared_error
 
@@ -157,3 +158,31 @@ def compare_AR_models(lag_sets:list, X, h:int, window_h_ratio:int=5):
         lags = lag_sets[i]
         _, rmse_avg, rmse_var = rolling_eval_AR(lags=lags, X=X, h=h, window_h_ratio=window_h_ratio)
         print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
+
+
+class LastBaseline():
+
+    def fit(self, X):
+        self.last = X[-1:]
+        return self
+    
+    def forecast(self, y:pd.Series) -> pd.Series:
+        # Input y to easily grab datetime index
+        y_hat = y.copy()
+        h = len(y_hat)
+        for i in range(h):
+            y_hat.iloc[i] = self.last
+        return y_hat
+
+class RepeatBaseline():
+
+    def fit(self, X:pd.Series):
+        self.X = X
+        return self
+
+    def forecast(self, y:pd.Series) -> pd.Series:
+        y_hat = y.copy()
+        h = len(y_hat)
+        for i in range(h):
+            y_hat.iloc[i] = self.X.iloc[-h+i]
+        return y_hat
