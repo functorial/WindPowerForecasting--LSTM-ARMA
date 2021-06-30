@@ -21,19 +21,28 @@ def adf_summary(X):
         print("Fail to reject null: Time series may not be stationary.")
 
 
-def eval_ARMA(AR_lags:int, MA_lags:int, train, val):
+def eval_ARMA(AR_lags, MA_lags, train, val):
     '''Creates and trains an ARMA model with the 
     supplied significant lags. Returns the root mean 
     squared error of the model predictions against the 
     supplied validation set.''' 
 
-    model = ARIMA(train, order=(AR_lags, 0, MA_lags), enforce_stationarity=False, enforce_invertibility=False)
-    model_fit = model.fit()
-    val_hat = model_fit.forecast(len(val))
+    val_hat = val.copy()
+    train_updated = train.copy()
+    for i in range(len(val_hat)):
+        # Train on window
+        model = ARIMA(train_updated, order=(AR_lags, 0, MA_lags), enforce_stationarity=False, enforce_invertibility=False)
+        model_fit = model.fit()
+        # Make prediction
+        pred = model_fit.forecast(1)
+        val_hat.iloc[i] = pred
+        # Move window
+        train_updated.append(val_hat.iloc[i:i+1])
+        train_updated = train_updated.iloc[1:]
     rmse = sqrt(mean_squared_error(val, val_hat))
     return rmse 
 
-def rolling_eval_ARMA(AR_lags:int, MA_lags:int, X, h:int, window_h_ratio:int=5):
+def rolling_eval_ARMA(AR_lags, MA_lags, X, h:int, window_h_ratio:int=5):
     '''Performs a rolling window analysis on an 
     ARMA model with the suppllied significant lags. 
     X is the full time series, h is the size of the forecast horizon. 
@@ -81,26 +90,46 @@ def compare_ARMA_models(AR_lag_sets:list, MA_lag_sets:list, X, h:int, window_h_r
     T = len(X) - idx            # Sample size after slice.
     N = ((T-m)//h)+1            # Number of windows.
     assert m <= len(X), 'Window size must be smaller than time series.'
-    print(f"Window Size: {m}\tNum Windows: {N}\n")
-
+    num_tests = len(AR_lag_sets) * len(MA_lag_sets)
+    rmse_avgs = list()
+    print(f"Window Size: {m}+{h}\tNum Windows: {N}\n")
     i = 0
     for p in AR_lag_sets:
         for q in MA_lag_sets:
             i += 1
-            print(f"Test {i}: ARMA(p={p}, q={q}))\n========================================================")
-            _, rmse_avg, rmse_var = rolling_eval_ARMA(AR_lags=p, MA_lags=q, X=X, h=h, window_h_ratio=window_h_ratio)
-            print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
-
+            print(f"Test {i}: ARMA(p={p}, q={q})")
+            print("========================================================")
+            try:
+                _, rmse_avg, rmse_var = rolling_eval_ARMA(AR_lags=p, MA_lags=q, X=X, h=h, window_h_ratio=window_h_ratio)
+                rmse_avgs.append(rmse_avg)
+                print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
+            except IndexError:
+                print("ERR: CHECK LAG BOUNDS")
+                num_tests -= 1
+    try:
+        g_mean = sum(rmse_avgs)/num_tests
+        print(f"\nGrand Mean RMSE: {g_mean:.3f}")
+    except ZeroDivisionError:
+        print(f"\nGrand Mean RMSE: ERROR")
 
 def eval_AR(lags:list, train, val):
     '''Creates and trains an AutoRegressive model with the 
     supplied significant lags. Returns the root mean 
     squared error of the model predictions against the 
     supplied validation set.''' 
-
-    model = AutoReg(train, lags, old_names=False)
-    model_fit = model.fit()
-    val_hat = model_fit.forecast(len(val))
+    
+    val_hat = val.copy()
+    train_updated = train.copy()
+    for i in range(len(val_hat)):
+        # Train on window
+        model = AutoReg(train_updated, lags, old_names=False)
+        model_fit = model.fit()
+        # Make prediction
+        pred = model_fit.forecast(1)
+        val_hat.iloc[i] = pred
+        # Move window
+        train_updated.append(val_hat.iloc[i:i+1])
+        train_updated = train_updated.iloc[1:]
     rmse = sqrt(mean_squared_error(val, val_hat))
     return rmse 
 
@@ -151,13 +180,25 @@ def compare_AR_models(lag_sets:list, X, h:int, window_h_ratio:int=5):
     T = len(X) - idx            # Sample size after slice.
     N = ((T-m)//h)+1            # Number of windows.
     assert m <= len(X), 'Window size must be smaller than time series.'
-    print(f"Window Size: {m}\tNum Windows: {N}\n")
-
+    num_tests = len(lag_sets)
+    rmse_avgs = list()
+    print(f"Window Size: {m}+{h}\tNum Windows: {N}\n")
     for i in range(len(lag_sets)):
-        print(f"Test {i}: AR(lags={lag_sets[i]})\n========================================================")
         lags = lag_sets[i]
-        _, rmse_avg, rmse_var = rolling_eval_AR(lags=lags, X=X, h=h, window_h_ratio=window_h_ratio)
-        print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
+        print(f"Test {i}: AR(lags={lag_sets[i]})")
+        print("========================================================")
+        try:
+            _, rmse_avg, rmse_var = rolling_eval_AR(lags=lags, X=X, h=h, window_h_ratio=window_h_ratio)
+            print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
+            rmse_avgs.append(rmse_avg)
+        except IndexError:
+            print("ERR: CHECK LAG BOUNDS")
+            num_tests -= 1
+    try:
+        g_mean = sum(rmse_avgs)/num_tests
+        print(f"\nGrand Mean RMSE: {g_mean:.3f}")
+    except ZeroDivisionError:
+        print(f"\nGrand Mean RMSE: ERROR")
 
 
 class LastBaseline():
