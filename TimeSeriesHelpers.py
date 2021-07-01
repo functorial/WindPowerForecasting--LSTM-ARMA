@@ -103,7 +103,7 @@ def compare_ARMA_models(AR_lag_sets:list, MA_lag_sets:list, X, h:int, window_h_r
                 _, rmse_avg, rmse_var = rolling_eval_ARMA(AR_lags=p, MA_lags=q, X=X, h=h, window_h_ratio=window_h_ratio)
                 rmse_avgs.append(rmse_avg)
                 print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
-            except IndexError:
+            except (IndexError, ValueError):
                 print("ERR: CHECK LAG BOUNDS")
                 num_tests -= 1
     try:
@@ -191,7 +191,7 @@ def compare_AR_models(lag_sets:list, X, h:int, window_h_ratio:int=5):
             _, rmse_avg, rmse_var = rolling_eval_AR(lags=lags, X=X, h=h, window_h_ratio=window_h_ratio)
             print(f"RMSE Mean: {rmse_avg:.2f}\tRMSE Variance: {rmse_var:.2f}\n")
             rmse_avgs.append(rmse_avg)
-        except IndexError:
+        except (IndexError, ValueError):
             print("ERR: CHECK LAG BOUNDS")
             num_tests -= 1
     try:
