@@ -4,6 +4,35 @@ from statsmodels.tsa.arima.model import ARIMA
 import pandas as pd
 from math import sqrt
 from sklearn.metrics import mean_squared_error
+import torch
+import torch.nn as nn
+
+class LSTM_ManyToOne(nn.Module):
+
+    def __init__(self, input_dim, hidden_dim, batch_size, num_layers, output_dim=1):
+        super(LSTM_ManyToOne, self).__init__()
+        self.input_dim = input_dim      # The number of expected features in the input x
+        self.hidden_dim = hidden_dim    # The number of features in the hidden state h
+        self.batch_seize = batch_size   # The number of inputs in a batch
+        self.num_layers = num_layers    # Number of recurrent layers. 
+                                        # E.g., setting num_layers=2 would mean stacking two LSTMs
+
+        # lstm_input: [input_dim] x [batch_size] x [num_features]
+        # lstm_output: 
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers)
+
+        # fc_input: [hidden_size]   because it takes as input the final hidden state
+        self.fc = nn.Linear(hidden_dim, output_dim)
+
+        def forward(self, x):
+            # Hidden & cell states are init as 0 by default
+
+            # out: [input_dim] x [batch_size] x [hidden_dim]
+            out, _ = self.lstm(x)
+
+            # Input of fc is last hidden layer output
+            out = self.fc(out[-1])  
+            return out.view(-1)
 
 def adf_summary(X):
     '''Applies the Automated Dickey-Fuller test.
