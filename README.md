@@ -35,7 +35,7 @@ We apply the Automated Dickey-Fuller test to this new time series to see that it
 The Autocorrelation function (ACF) slowly decays while the Partial Autocorrelation function (PACF) drops off quickly. This suggests that an AutoRegressive (AR) model might work as a good model. 
 
 <p align="center">
-    <img src="ACF_PACF.png" width="600" />
+    <img src="ACF_PACF.png" width="900" />
 </p>
 
 ## Autoregressive Models
