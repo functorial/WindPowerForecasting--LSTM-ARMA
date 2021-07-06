@@ -44,13 +44,13 @@ An $AR(p)$ model is defined as
 $$ X_t = \beta_0 + \beta_1 X_{t-1} + \dots + \beta_p X_{t-p} + \epsilon_t $$
 where $X_i$ is the value of $X$ at time $i$, $\beta_j$ are the parameters, and $\epsilon_t$ is the error. In English, this says that the value of $X$ at any time $t$ is a constant plus some fixed linear combination of the values of $X$ at the previous $p$ time steps, within some level of error. 
 
-We can find an appropriate value for $p$ by validating many different $AR(p_k)$ models against each other. We will tune the values of $\beta_i$ by a Walk Forward Validation. This simulates the process of updating a model as new information comes in.
+We can find an appropriate value for $p$ by validating many different $AR(p_k)$ models against each other. We will tune the values of $\beta_i$ by a walk forward validation. The data is split into smaller chunks, and each chunk is split 5:1 into training and validation data. The training data for a chunk acts as a rolling window -- a model is trained on this data and the next ovbservation is predicted. This prediction is saved and fed back into the training data. The process repeats until the validation chunk has been exhausted. This simulates the process of updating a model as new information comes in.
 
 <p align="center">
     <img src="WalkForward.gif" width="600" />
 </p>
 
-We that the models generally perform the best when we use batches of size 45 days for our in-sample data. For this window size, an $AR(3)$ model maintains the lowest mean RMSE over the windows with a relatively low variance.
+A model is evaluated by recording the mean and variance of the RMSE for each validation chunk. We that the models generally perform the best when we use batches of size 45 days for our in-sample data. For this window size, an $AR(3)$ model maintains the lowest mean RMSE over the windows with a relatively low variance.
 
 For fun, we also test for ARMA models. An ARMA model is simply a sum of an AR and an MA model. A Moving Average model $MA(q)$ is a regression 
 $$
@@ -60,7 +60,7 @@ where $\epsilon_i$ is the error at time $t$ and the $\theta_i$ are the parameter
 
 An $ARMA(p,q)$ model is of the form $AR(p) + MA(q)$. We find that $ARMA(2,1)$ performs slightly better on the in-sample data. 
 
-## Long Short-Term Memory (LSTM) Recurrent Neural Networks
+## Long Short-Term Memory Recurrent Neural Networks
 
 A Long Short-Term Memory Recurrent Neural Network (LSTM) is a Recurrent neural network (RNN) that is designed to address the vanishing and exploding gradient problems of conventional RNNs. The $t+1$ th hidden state is defined like 
 $$H_{t+1} = A(H_t, x_t)$$
@@ -77,4 +77,14 @@ As new information $x_t$ is inputted into (the bottom of) the system, it and the
 The dimension of the hidden states $h_t$ is a hyperparameter for the LSTM. We train three different LSTMs (using the same walk forward validation strategy as above) with hidden dimmensions 64, 128, and 256. 
 
 ## Results
+We test each model on 15 days of fresh data. The models are evauated against two different baselines. The `LastBaseline` is defined by $X_t = X_{t-1}$ and the `RepeatBaseline` is defined by $X_t = X_{t-15}$. We also test ensembles of the ARMA model with the LSTM models.
+<p align="center">
+    <img src="TestGraphs.png" width="600" />
+</p>
+<p align="center">
+    <img src="TestErrors.png" width="600" />
+</p>
 
+We can see that the AR and ARMA models perform worse than the baseline models, but the LSTM models perform better with $LSTM(256)$ performing the best. The AR and ARMA models seem to be too sensitive to changes, while the LSTM may not be sensitive enough. Regardless, the ensembles aren't doing any favors for the RMSE scores, although it's possible they could perform better on a different test set. 
+
+Further work should go into finding a better model. The next thing to do might be to try a more modern neural network architechture, such as a transformer. Facebook's Prophet might also be interesting to try. 
