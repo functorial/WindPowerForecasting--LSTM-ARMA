@@ -66,11 +66,11 @@ A Long Short-Term Memory Recurrent Neural Network (LSTM) is a Recurrent neural n
 $$H_{t+1} = A(H_t, x_t)$$
 where $x_t$ is the $t$ th point in the sequence and $A$ is some activation. 
 <p align="center">
-    <img src="Unrolled_RNN.png" width="600" />
+    <img src="Unrolled_RNN.png" width="900" />
 </p>
 This type of network suffers from short-term memory loss. This means that information passed through the system earlier in the sequence will contribute less to the output. If $t$ has a large range, then the activation $A$ is called many times recursively, which means the gradient will contain many products of $A$. An LSTM defines $A$ in a clever way so that the gradients are less likely to explode or vanish. 
 <p align="center">
-    <img src="LSTM_cell.png" width="600" />
+    <img src="LSTM_cell.png" width="900" />
 </p>
 As new information $x_t$ is inputted into (the bottom of) the system, it and the previous hidden state are passed through multiple gates which regulate the cell state (at the top). This allows for the inherent short-term memory of the RNN to be prolonged, as the system can choose to remember or forget specific bits of the sequence data along the way.
 
