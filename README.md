@@ -79,7 +79,7 @@ The dimension of the hidden states $h_t$ is a hyperparameter for the LSTM. We tr
 ## Results
 We test each model on 15 days of fresh data. The models are evauated against two different baselines. The `LastBaseline` is defined by $X_t = X_{t-1}$ and the `RepeatBaseline` is defined by $X_t = X_{t-15}$. We also test ensembles of the ARMA model with the LSTM models.
 <p align="center">
-    <img src="TestGraphs.png" width="800" />
+    <img src="TestGraphs.png" width="1100" />
 </p>
 <p align="center">
     <img src="TestErrors.png" width="600" />
